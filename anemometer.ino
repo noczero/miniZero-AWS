@@ -1,22 +1,39 @@
 
 /*
- * 4051 pin switch
- * S2 S1 S0   Description
- * 0  0   1   Output in y1
- * 0  1   0   Output in y2
+ * Bismillahirahmanirahim
+ * To do list :
+ * 1. Power Supply System (done)
+ * 2. Reading potensio as Wind Direction (done) 
+ * 3. Reading A3144 using interrupt (done)
+ * 4. make function value to mata angin (done)
+ * 5. LED as Notification (done)
+ * 6. Improve Accuracy wind direction 
+ * 7. Reading LDR as light intensity (done)
+ * 8. Reading DHT for temperature and humidity
+ * Microcontroller :
+ * -- ESP12E on Wemos D1 Mini
+ * IC use : 
+ * -- 4051 pin switch
+ *  S2 S1 S0   Description
+ *  0  0   1   Output in y1
+ *  0  1   0   Output in y2
+ * sensor use :
+ * -- potensiometer Analog Input (Wind Direction)
+ * -- LDR as Analog Input (Light Intensity / Lux)
+ * -- A3144 as Digital Input (Wind Speed)
  */
 
 #define ADC A0 // ANALOG PIN FOR SENSOR
 #define internalLED 2 
 #define LED1 5
 #define LED2 4
+#define LED3 15
 #define D5 14 // OUTPUT HIGH OR LOW S2
 #define D6 12 // OUTPUT HIGH OR LOW S1
 #define D7 13 // OUTPUT HIGH OR LOW S0
 #define hall 2 // digital hall effect
 
 int readingAnalog = 0;
-
 
 void setup() {
   // put your setup code here, to run once:
@@ -31,6 +48,7 @@ void setup() {
   //pinMode(internalLED, OUTPUT);
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
+  pinMode(LED3, OUTPUT);
 
   //interrupt all gpio beside gpio16
   pinMode(hall, INPUT_PULLUP);
@@ -67,6 +85,13 @@ void detectMagnet(){
   Serial.println("Magnet Detected");
 }
 
+void turnDark(int value){
+  if (value > 500)
+    digitalWrite(LED3, LOW);
+  else 
+    digitalWrite(LED3,HIGH);
+}
+
 String convertArahAngin(int value){
   // input 0 - 360
   // output utara, timur laur, timur, tenggara, selatan, barat daya, barat laut
@@ -91,7 +116,7 @@ String convertArahAngin(int value){
   
 }
 
-int arahAngin = 0, rpm = 0, hallEffectRead = 0, potensioRead = 0, digitalHall =0;
+int arahAngin = 0, rpm = 0, ldrRead = 0, potensioRead = 0, digitalHall =0;
 void loop() {
     // put your main code here, to run repeatedly:
     switchMode(D7,HIGH,D6,LOW,D5,LOW); // y1 Input
@@ -107,9 +132,10 @@ void loop() {
     Serial.println(convertArahAngin(arahAngin));
     
     switchMode(D7,LOW,D6,HIGH,D5,LOW); // y2 input
-    hallEffectRead = analogRead(ADC);
-    Serial.print("Hall Effect Reading : ");
-    Serial.print(hallEffectRead);
+    ldrRead = analogRead(ADC);
+    Serial.print("LDR Reading : ");
+    Serial.print(ldrRead);
+    turnDark(ldrRead);
     Serial.println();
 
     // hall Value
@@ -122,3 +148,5 @@ void loop() {
     digitalWrite(LED2, LOW); // defult LOW, HIGH when detects magnet
     delay(100);
 }
+
+
